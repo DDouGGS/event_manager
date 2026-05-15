@@ -35,7 +35,7 @@ abstract class EventManager
     }
 
     // Adiciona novo observer para o evento
-    private function newObserver($name)
+    private static function newObserver($name)
     {
         try{
             self::$events[$name] = new Observers($name);
@@ -45,53 +45,75 @@ abstract class EventManager
         return true;
     }
 
-    // Recupera evento registrado
-    public static function retrieve($event)
+    // Registra uma reação
+    public static function record($name, ReactionsInterface $reaction)
     {
-        return (isset(self::$events[$event]))? self::$events[$event]: null;
+        // register listener
+        if (isset($name) && !empty($name)) {
+            if(self::exists($name)){
+                // with observer
+                if(isset($reaction) && is_object($reaction)){
+                    self::$events[$name] = $reaction;
+                    return true;
+                }
+                return false;
+            }
+            // with observer
+            if(isset($observer) && is_object($observer)){
+                self::$events[$name] = $reaction;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Recupera evento registrado
+    public static function retrieve($name)
+    {
+        return (isset(self::$events[$name]))? self::$events[$name]: null;
     }
 
     // Existencia do evento
-    public static function exists($event)
+    public static function exists($name)
     {
-        return (isset(self::$events[$event]))? true: false;
+        return (isset(self::$events[$name]))? true: false;
     }
 
     // Adiciona observador para o evento
-    public static function attach($event, $observer)
+    public static function attach($name, $observer)
     {
         if (!is_object($observer)) { return false; }
-        $o = self::retrieve($event);
+        $o = self::retrieve($name);
         return (isset($o))? $o->attach(get_class($observer), $observer): false;
     }
 
     // Exclui um observador de determinado evento
-    public static function deattach($event, $index)
+    public static function deattach($name, $index)
     {
-        if (!isset($event) || empty($event) || !isset($index) || empty($index)) { return false; }
-        $o = self::retrieve($event);
+        if (!isset($name) || empty($name) || !isset($index) || empty($index)) { return false; }
+        $o = self::retrieve($name);
         return (isset($o))? $o->deattach($index): false;
     }
 
     // Notifica os observadores do evento
-    public static function notify($event, &$paramn)
+    public static function notify($name, &$paramn)
     {
         if(!is_object($paramn)){ return false;}
-        $o = self::retrieve($event);
+        $o = self::retrieve($name);
         return (isset($o))? $o->notify($paramn): false;
     }
 
     // Limpa todos os observadores para um determinado evento
-    public static function clear($event)
+    public static function clear($name)
     {
-        $o = self::retrieve($event);
-        return (isset($o))? $o->clear(): false;
+        $o = self::retrieve($name);
+        return (isset($o))? $events[$name] = null: false;
     }
 
     // Lista os observers de determinado evento
-    public static function keys($event)
+    public static function keys($name)
     {
-        $o = self::retrieve($event);
+        $o = self::retrieve($name);
         return (isset($o))? $o->listing(): array();
     }
 }

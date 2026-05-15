@@ -6,14 +6,14 @@ use event_manager\ObserversInterface;
 
 class Observers implements ObserversInterface
 {
-    protected $event         = null;
+    protected $name          = null;
     protected $protocol      = null;
     public static $observers = array();
 
     // Evento construtor da classe
-    public function __construct($event, $index = null, $observer = null)
+    public function __construct($name, $index = null, $observer = null)
     {
-        $this->event = $event;
+        $this->name = $name;
         $this->protocol = (string) microtime(true);
         if(isset($index) && !empty($index) && is_object($observer)){
             $this->attach($index, $observer);
@@ -21,16 +21,16 @@ class Observers implements ObserversInterface
     }
 
     // Criar instancia da classe
-    public static function make($event, $index = null, $observer = null)
+    public static function make($name, $index = null, $observer = null)
     {
-        return new Observers($event, $index, $observer);
+        return new Observers($name, $index, $observer);
     }
 
     // Adiciona observador para o evento
     public function attach($index, $observer)
     {
         if(isset($index) && !empty($index) && is_object($observer)) {
-            if(method_exists($observer, $this->event)){
+            if(method_exists($observer, $this->name)){
                 self::$observers[$index] = $observer;
                 return true;
             }
@@ -50,12 +50,12 @@ class Observers implements ObserversInterface
     }
 
     // Dispara o evento para os observadores
-    public function notify(&$paramn)
+    public function notify(object &$paramn)
     {
         foreach (self::$observers as $key => $item) {
             try {
-                if(method_exists($item, $this->event)){
-                    $item->{$this->event}($paramn);
+                if(method_exists($item, $this->name)){
+                    $item->{$this->name}($paramn);
                 }
             } catch (\Exception $e) {
                 throw new \Exception($e->getMessage());
