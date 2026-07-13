@@ -11,7 +11,7 @@ interface ObserversInterface
     public function deattach($index);
     
     // Dispara o evento para os observadores
-    public function notify(object &$paramn);
+    public function notify($paramn);
 
     // Limpa os observadores
     public function clear();

@@ -3,33 +3,29 @@
 namespace event_manager;
 
 use event_manager\ReactionsInterface;
-use event_manager\HandlerInterface;
 
-class Reactions implements ReactionsInterface
+abstract class Reactions implements ReactionsInterface
 {
-    protected $event         = null;
-    protected $protocol      = null;
+    protected $event    = null;
+    protected $protocol = null;
 
     // Evento construtor da classe
-    public function __construct(HandlerInterface $event)
+    public function __construct()
     {
-        $this->event = $event;
         $this->protocol = (string) microtime(true);
     }
 
     // Criar instancia da classe
-    public static function make($event)
+    public static function make()
     {
-        return new Observers($event);
+        return new Reactions();
     }
 
     // Dispara o evento para os observadores
-    public function notify(object &$paramn)
+    public function notify($paramn)
     {
-        if(method_exists($this->event, 'handler')){
-            $this->event->handler($paramn);
-            return true;
-        }
-        return false;
+        return $this->handler($paramn);
     }
+
+    abstract public function handler($paramn);
 }

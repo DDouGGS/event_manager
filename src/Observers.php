@@ -50,7 +50,7 @@ class Observers implements ObserversInterface
     }
 
     // Dispara o evento para os observadores
-    public function notify(object &$paramn)
+    public function notify($paramn)
     {
         foreach (self::$observers as $key => $item) {
             try {
