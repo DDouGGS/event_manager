@@ -51,15 +51,15 @@ abstract class EventManager
         // register listener
         if (isset($name) && !empty($name)) {
             if(self::exists($name)){
-                // with observer
+                // with reaction
                 if(isset($reaction) && is_object($reaction)){
                     self::$events[$name] = $reaction;
                     return true;
                 }
                 return false;
             }
-            // with observer
-            if(isset($observer) && is_object($observer)){
+            // with reaction
+            if(isset($reaction) && is_object($reaction)){
                 self::$events[$name] = $reaction;
                 return true;
             }
@@ -96,9 +96,8 @@ abstract class EventManager
     }
 
     // Notifica os observadores do evento
-    public static function notify($name, &$paramn)
+    public static function notify($name, $paramn)
     {
-        if(!is_object($paramn)){ return false;}
         $o = self::retrieve($name);
         return (isset($o))? $o->notify($paramn): false;
     }

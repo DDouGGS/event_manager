@@ -185,4 +185,10 @@ FodyWeavers.xsd
 *.drawio
 *.drawio.bkp
 
+composer.lock
+composer.json
+
+/tsts/
+/test_commands.json
+
 

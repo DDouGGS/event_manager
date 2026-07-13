@@ -15,5 +15,7 @@
         }
     ],
     "minimum-stability": "alpha",
-    "require": {}
+    "require": {
+        "ddouggs/test_command": "v0.*.*"
+    }
 }

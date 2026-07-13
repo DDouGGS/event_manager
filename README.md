@@ -292,44 +292,6 @@ Esta classe depende de:
 
 ---
 
-# Possíveis Melhorias
-
-Alguns pontos podem ser aprimorados na implementação atual:
-
-* Correção do método `clear()`:
-
-```php
-return (isset($o))? $events[$name] = null: false;
-```
-
-Provavelmente deveria ser:
-
-```php
-return (isset($o)) ? self::$events[$name] = null : false;
-```
-
----
-
-* Correção no método `record()`:
-
-Existe referência a variável inexistente:
-
-```php
-$observer
-```
-
----
-
-* Melhorar tipagem com PHP 8+
-
-Exemplo:
-
-```php
-public static function exists(string $name): bool
-```
-
----
-
 # Licença
 
 A Licença Apache 2.0 é uma licença de software de código aberto permissiva e popular. Ela permite o uso, modificação, distribuição e comercialização do software, inclusive em projetos fechados, desde que mantenha os créditos de autoria, inclua uma cópia da licença e relate as alterações feitas.
