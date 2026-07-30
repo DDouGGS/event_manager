@@ -5,13 +5,13 @@ namespace event_manager;
 interface ObserversInterface
 {
     // Adiciona observador para o evento
-    public function attach($index, $observer);
+    public function attach($observer);
 
     // Exclui observador para o evento
     public function deattach($index);
-    
+
     // Dispara o evento para os observadores
-    public function notify($paramn);
+    public function notify(array $params = array());
 
     // Limpa os observadores
     public function clear();

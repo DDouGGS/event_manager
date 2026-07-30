@@ -4,6 +4,6 @@ namespace event_manager;
 
 interface ReactionsInterface
 {
-    // Reagir ao disparo do evento.
-    public function notify($paramn);
+    // Dispara o evento para os observadores
+    public function notify(array $params = array());
 }

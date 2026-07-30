@@ -1,30 +1,31 @@
 # EventManager
 
-Sistema simples de gerenciamento de eventos e observadores em PHP utilizando o padrão **Observer**.
+Sistema de gerenciamento de eventos e observadores em PHP utilizando o padrão **Observer** e suporte a **Reações**.
 
 A classe `EventManager` permite:
 
-* Registrar eventos
-* Adicionar observadores (observers)
-* Notificar listeners
-* Registrar reações customizadas
-* Recuperar eventos registrados
-* Remover observers
-* Listar observers ativos
+* Registrar eventos e observadores (observers)
+* Notificar observadores e reações enviando parâmetros
+* Registrar reações customizadas (`ReactionsInterface`)
+* Anexar (`attach`) e desanexar (`deattach`) observadores
+* Verificar a existência e recuperar eventos registrados
+* Listar observadores ativos (`keys`) e limpar eventos (`clear`)
 
 ---
 
-# Estrutura
+## 📌 Estrutura e Namespace
 
 ```php
 namespace event_manager;
 
 use event_manager\Observers;
+use event_manager\ReactionsInterface;
+use event_manager\ObserversInterface;
 
 abstract class EventManager
 ```
 
-A classe utiliza um array estático para armazenar todos os eventos registrados:
+A classe utiliza uma propriedade estática para armazenar os eventos e observadores registrados:
 
 ```php
 public static $events = array();
@@ -32,73 +33,74 @@ public static $events = array();
 
 ---
 
-# Métodos Disponíveis
+## 🚀 Instalação e Requisitos
 
-## add()
+### Requisitos
+* PHP 7.x ou superior
 
-Registra um novo evento ou adiciona um observer a um evento existente.
-
-### Assinatura
+### Autoload via Composer
+Certifique-se de carregar o autoloader no seu projeto:
 
 ```php
-EventManager::add($name, $observer = null);
+require_once __DIR__ . '/vendor/autoload.php';
+
+use event_manager\EventManager;
 ```
 
-### Parâmetros
+---
 
-| Parâmetro   | Tipo   | Descrição         |
-| ----------- | ------ | ----------------- |
-| `$name`       | string | Nome do evento    |
-| `$observer`   | object | Observer opcional |
+## 🛠️ Métodos Disponíveis
 
-### Exemplo
+### `add($name, $observer = null)`
+Registra um novo evento ou acrescenta um observador a um evento já existente (atalho para `observer()`).
+
+* **Parâmetros:**
+  * `string $name`: Nome do evento.
+  * `object|null $observer`: Instância da classe observadora (opcional).
+* **Retorno:** `bool`
 
 ```php
 EventManager::add('user.created');
-```
-
-Com observer:
-
-```php
+// ou com um observer
 EventManager::add('user.created', new UserObserver());
 ```
 
 ---
 
-## record()
+### `observer($name, $observer = null)`
+Registra um novo evento ou adiciona um observador a um evento existente. Para que o observer seja anexado com sucesso, ele deve possuir um método com o mesmo nome do evento.
 
-Registra uma reação personalizada para um evento.
-
-### Assinatura
-
-```php
-EventManager::record($name, ReactionsInterface $reaction);
-```
-
-### Exemplo
+* **Parâmetros:**
+  * `string $name`: Nome do evento.
+  * `object|null $observer`: Instância da classe observadora (opcional).
+* **Retorno:** `bool`
 
 ```php
-EventManager::record('user.created', new UserReaction());
+EventManager::observer('user_created', new UserObserver());
 ```
 
 ---
 
-## retrieve()
+### `reaction($name, ReactionsInterface $reaction)`
+Registra uma reação direta a um evento através de uma classe que implementa `ReactionsInterface`.
 
-Recupera um evento registrado.
-
-### Assinatura
+* **Parâmetros:**
+  * `string $name`: Nome do evento.
+  * `ReactionsInterface $reaction`: Instância de uma classe de reação.
+* **Retorno:** `bool`
 
 ```php
-EventManager::retrieve($name);
+EventManager::reaction('order.shipped', new SendEmailReaction());
 ```
 
-### Retorno
+---
 
-* Objeto do evento
-* `null` caso não exista
+### `retrieve($name)`
+Recupera o objeto de evento/observador registrado pelo nome.
 
-### Exemplo
+* **Parâmetros:**
+  * `string $name`: Nome do evento.
+* **Retorno:** `ObserversInterface|ReactionsInterface|null`
 
 ```php
 $event = EventManager::retrieve('user.created');
@@ -106,61 +108,42 @@ $event = EventManager::retrieve('user.created');
 
 ---
 
-## exists()
+### `exists($name)`
+Verifica se um evento já foi registrado.
 
-Verifica se um evento existe.
-
-### Assinatura
-
-```php
-EventManager::exists($name);
-```
-
-### Retorno
-
-```php
-true | false
-```
-
-### Exemplo
+* **Parâmetros:**
+  * `string $name`: Nome do evento.
+* **Retorno:** `bool`
 
 ```php
 if (EventManager::exists('user.created')) {
-    // evento existe
+    // Evento registrado
 }
 ```
 
 ---
 
-## attach()
+### `attach($name, $observer)`
+Anexa um novo observador a um conjunto de observadores de um evento já registrado.
 
-Adiciona um observer a um evento existente.
-
-### Assinatura
-
-```php
-EventManager::attach($name, $observer);
-```
-
-### Exemplo
+* **Parâmetros:**
+  * `string $name`: Nome do evento.
+  * `object $observer`: Instância do observador.
+* **Retorno:** `bool`
 
 ```php
-EventManager::attach('user.created', new UserObserver());
+EventManager::attach('user.created', new SendWelcomeEmailObserver());
 ```
 
 ---
 
-## deattach()
+### `deattach($name, $index)`
+Remove um observador específico de um evento pelo seu índice ou chave (geralmente o nome da classe do observador).
 
-Remove um observer de um evento.
-
-### Assinatura
-
-```php
-EventManager::deattach($name, $index);
-```
-
-### Exemplo
+* **Parâmetros:**
+  * `string $name`: Nome do evento.
+  * `string $index`: Identificador/nome da classe do observador a ser removido.
+* **Retorno:** `bool`
 
 ```php
 EventManager::deattach('user.created', 'UserObserver');
@@ -168,45 +151,26 @@ EventManager::deattach('user.created', 'UserObserver');
 
 ---
 
-## notify()
+### `notify($name, array $paramn = array())`
+Notifica todos os observadores ou executa a reação associada ao evento, passando um array de parâmetros.
 
-Notifica todos os observers registrados para o evento.
-
-### Assinatura
-
-```php
-EventManager::notify($name, &$paramn);
-```
-
-### Parâmetros
-
-| Parâmetro | Tipo   | Descrição                    |
-| --------- | ------ | ---------------------------- |
-| `$name`     | string | Nome do evento               |
-| `$paramn`   | object | Objeto enviado aos observers |
-
-### Exemplo
+* **Parâmetros:**
+  * `string $name`: Nome do evento.
+  * `array $paramn`: Array de parâmetros a serem enviados (padrão: `array()`).
+* **Retorno:** `bool`
 
 ```php
-$user = new stdClass();
-$user->name = 'John';
-
-EventManager::notify('user.created', $user);
+EventManager::notify('user.created', ['id' => 1, 'email' => 'user@example.com']);
 ```
 
 ---
 
-## clear()
+### `clear($name)`
+Limpa/remove os observadores registrados para um determinado evento.
 
-Remove todos os observers de um evento.
-
-### Assinatura
-
-```php
-EventManager::clear($name);
-```
-
-### Exemplo
+* **Parâmetros:**
+  * `string $name`: Nome do evento.
+* **Retorno:** `bool`
 
 ```php
 EventManager::clear('user.created');
@@ -214,86 +178,91 @@ EventManager::clear('user.created');
 
 ---
 
-## keys()
+### `keys($name)`
+Retorna uma lista com as chaves (nomes das classes) dos observadores registrados em determinado evento.
 
-Lista todos os observers registrados no evento.
-
-### Assinatura
-
-```php
-EventManager::keys($name);
-```
-
-### Exemplo
+* **Parâmetros:**
+  * `string $name`: Nome do evento.
+* **Retorno:** `array`
 
 ```php
-$list = EventManager::keys('user.created');
+$observers = EventManager::keys('user.created');
+// Retorna array com os nomes das classes dos observers
 ```
 
 ---
 
-# Exemplo Completo
+## 💡 Exemplos de Uso
 
-## Criando um Observer
+### 1. Utilizando Observadores (Observers)
+
+A classe do observador deve conter um método com o mesmo nome do evento a ser tratado:
 
 ```php
+use event_manager\EventManager;
+
 class UserObserver
 {
-    public function user_created($user)
+    public function user_created(array $data)
     {
-        echo "Usuário criado: {$user->name}";
+        echo "Usuário criado com sucesso: " . $data['name'];
     }
 }
+
+// 1. Registra o evento com o observador
+EventManager::add('user_created', new UserObserver());
+
+// 2. Dispara a notificação para o evento
+EventManager::notify('user_created', ['name' => 'Maria']);
 ```
 
----
-
-## Registrando Evento
+### 2. Adicionando Múltiplos Observadores
 
 ```php
+class LogObserver
+{
+    public function user_created(array $data)
+    {
+        // Registra log...
+    }
+}
+
+// Registra o evento
 EventManager::add('user_created');
-```
 
----
-
-## Adicionando Observer
-
-```php
+// Anexa múltiplos observadores
 EventManager::attach('user_created', new UserObserver());
+EventManager::attach('user_created', new LogObserver());
+
+// Dispara o evento para todos os observadores
+EventManager::notify('user_created', ['name' => 'João']);
 ```
 
----
+### 3. Utilizando Reações (Reactions)
 
-## Disparando Evento
+Reações implementam `ReactionsInterface` e lidam diretamente com o evento:
 
 ```php
-$user = new stdClass();
-$user->name = 'Maria';
+use event_manager\EventManager;
+use event_manager\ReactionsInterface;
 
-EventManager::notify('user_created', $user);
+class AuditReaction implements ReactionsInterface
+{
+    public function notify(array $paramn = array())
+    {
+        // Executa a reação ao evento
+    }
+}
+
+// Registra a reação
+EventManager::reaction('audit.log', new AuditReaction());
+
+// Dispara a reação
+EventManager::notify('audit.log', ['action' => 'login']);
 ```
 
 ---
 
-# Fluxo Básico
+## 📄 Licença
 
-```text
-Evento → Observers → Notify → Reações
-```
-
----
-
-# Dependências
-
-Esta classe depende de:
-
-* `Observers`
-* `ReactionsInterface`
-
----
-
-# Licença
-
-A Licença Apache 2.0 é uma licença de software de código aberto permissiva e popular. Ela permite o uso, modificação, distribuição e comercialização do software, inclusive em projetos fechados, desde que mantenha os créditos de autoria, inclua uma cópia da licença e relate as alterações feitas.
-
----
+Este projeto está sob a Licença **Apache 2.0**. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
